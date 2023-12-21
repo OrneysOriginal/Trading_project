@@ -1,9 +1,8 @@
-import uuid
 from typing import Optional
 
 from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas
 
-from auth.db import User, get_user_db
+from src.db import User, get_user_db
 from fastapi import Request, Depends
 
 SECRET = 'SECRET'
