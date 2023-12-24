@@ -1,37 +1,24 @@
-from datetime import datetime
-from enum import Enum
-from typing import List, Optional, Union
+from fastapi import FastAPI
 
-import fastapi
-from fastapi import Depends
 from auth.base_config import auth_backend, fastapi_users
-from src.auth.models import User
 from auth.schemas import UserRead, UserCreate
 
-app = fastapi.FastAPI(
-    title='Trading App'
+from operations.router import router as router_operation
+
+app = FastAPI(
+    title="Trading App"
 )
 
 app.include_router(
     fastapi_users.get_auth_router(auth_backend),
-    prefix='/auth/jwt',
-    tags=['auth'],
+    prefix="/auth",
+    tags=["Auth"],
 )
 
 app.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix='/auth',
-    tags=['auth'],
+    prefix="/auth",
+    tags=["Auth"],
 )
 
-current_user = fastapi_users.current_user()
-
-
-@app.get('/protected-route')
-def protected_route(user: User = Depends(current_user)):
-    return f'Hello, {user.username}'
-
-
-@app.get('/unprotected-route')
-def unprotected_route():
-    return f'Hello, anonym'
+app.include_router(router_operation)
