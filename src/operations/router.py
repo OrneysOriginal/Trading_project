@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends
+import time
+
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi_cache.decorator import cache
 from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,12 +14,29 @@ router = APIRouter(
     tags=["Operation"]
 )
 
+@router.get('long_op')
+@cache(expire=30)
+def get_long_op():
+    time.sleep(2)
+    return 'Много много много запросов с одинаковыми данными'
+
 
 @router.get("/")
 async def get_specific_operations(operation_type: str, session: AsyncSession = Depends(get_async_session)):
-    query = select(operation).where(operation.c.type == operation_type)
-    result = await session.execute(query)
-    return result.mappings().all()
+    try:
+        query = select(operation).where(operation.c.type == operation_type)
+        result = await session.execute(query)
+        return {
+            'status': 'success',
+            'data': result.mappings().all(),
+            'details': None
+        }
+    except Exception:
+        raise HTTPException(status_code=500, detail={
+            'status': 'error',
+            'data': None,
+            'details': None
+        })
 
 
 @router.post("/")
